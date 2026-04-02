@@ -25,7 +25,16 @@ export async function getAssignmentList(courseId: number): Promise<Assignment[]>
         
         let data: any = await response.json();
         
-        return data.map((assignment: any) => new Assignment(assignment.name || "empty", assignment.id || 0, assignment.description, vscode.TreeItemCollapsibleState.None));
+        return data.map((assignment: any) => new Assignment(
+            assignment.name || "empty",
+            assignment.id || 0,
+            assignment.description || "",
+            vscode.TreeItemCollapsibleState.None,
+            assignment.due_at,
+            assignment.points_possible,
+            assignment.submission_types,
+            assignment.published
+        ));
     } catch (error: any) {
         vscode.window.showErrorMessage("LMS 연결 실패: " + error.message);
         return [];
