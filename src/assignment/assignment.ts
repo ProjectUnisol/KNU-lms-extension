@@ -31,13 +31,55 @@ export class Assignment extends vscode.TreeItem {
         public readonly label: string,
         public readonly id_: number,
         public readonly html: string,
+        public readonly dueAt: string,
+        public readonly pointsPossible: number,
+        public readonly submissionTypes: string[],
+        public readonly published: boolean,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState
     ) {
         super(label, collapsibleState);
+        this.tooltip = this.buildTooltip();
         this.command = {
             command: 'assignment.displayAssignmentPage',
             title: 'Display Assignment Page',
             arguments: [this],
         };
+    }
+
+    private buildTooltip(): vscode.MarkdownString {
+        const dueDateText = this.dueAt
+            ? this.formatKoreanDateTime(this.dueAt)
+            : '없음';
+        const pointsText = this.pointsPossible ?? '미지정';
+        const submissionTypesText = this.submissionTypes && this.submissionTypes.length > 0
+            ? this.submissionTypes.join(', ')
+            : '없음';
+        const publishText = this.published ? '공개' : '비공개';
+
+        return new vscode.MarkdownString(
+            `**${this.label}**\n\n` +
+            `- 마감일: ${dueDateText}\n` +
+            `- 배점: ${pointsText}\n` +
+            `- 제출 방식: ${submissionTypesText}\n` +
+            `- 상태: ${publishText}`
+        );
+    }
+
+    private formatKoreanDateTime(rawDate: string): string {
+        const date = new Date(rawDate);
+        if (Number.isNaN(date.getTime())) {
+            return '없음';
+        }
+
+        return new Intl.DateTimeFormat('ko-KR', {
+            timeZone: 'Asia/Seoul',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+        }).format(date);
     }
 }
