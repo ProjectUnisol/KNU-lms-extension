@@ -245,7 +245,7 @@ function getWebviewContent(assignment: Assignment, theme: 'light' | 'dark'): str
                 </section>
 
                 <form class="submit-card" action="/submit" method="post">
-                    <input type="hidden" name="assignmentId" value="${assignment.id_}">
+                    <input type="hidden" name="assignmentId" value="${assignment.assignmentId}">
                     <p>제출 전 과제 요건과 첨부 파일을 다시 확인하세요.</p>
                     <button class="submit-btn" type="submit">과제 제출하기</button>
                 </form>
