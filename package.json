@@ -30,6 +30,10 @@
         {
           "id": "assignment",
           "name": "assignment"
+        },
+        {
+          "id": "submission",
+          "name": "submission"
         }
       ]
     },
