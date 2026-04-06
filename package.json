@@ -72,6 +72,12 @@
           "type": "string",
           "default": "",
           "description": "LMS의 API를 사용하기 위한 토큰을 입력해주세요."
+        },
+        "knu.assignmentPageTheme": {
+          "type": "string",
+          "default": "light",
+          "description": "과제 페이지의 테마를 선택해주세요.",
+          "enum": ["light", "dark"]
         }
       }
     }

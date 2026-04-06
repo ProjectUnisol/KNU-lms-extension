@@ -2,16 +2,20 @@ import * as vscode from 'vscode';
 import { Assignment } from './assignment';
 
 export async function displayAssignmentPage(assignment: Assignment) {
+    const config = vscode.workspace.getConfiguration('knu');
+    const configuredTheme = config.get<string>('assignmentPageTheme') || 'light';
+    const theme = configuredTheme === 'dark' ? 'dark' : 'light';
+
     const panel = vscode.window.createWebviewPanel(
         'assignmentPage',
         `Assignment: ${assignment.label}`,
         vscode.ViewColumn.Two
     );
     
-    panel.webview.html = getWebviewContent(assignment);
+    panel.webview.html = getWebviewContent(assignment, theme);
 }
 
-function getWebviewContent(assignment: Assignment): string {
+function getWebviewContent(assignment: Assignment, theme: 'light' | 'dark'): string {
     const dueText = assignment.dueAt ? assignment.dueAt : '미정';
     const pointsText = assignment.pointsPossible ? `${assignment.pointsPossible}점` : '미지정';
     const submitTypeText = assignment.submissionTypes?.length
@@ -38,6 +42,20 @@ function getWebviewContent(assignment: Assignment): string {
                     --chip: #ebf5fa;
                     --chip-border: #c4dfea;
                     --shadow: 0 18px 46px rgba(24, 43, 54, 0.17);
+                }
+
+                body.theme-dark {
+                    --bg-top: #1c2a35;
+                    --bg-bottom: #111921;
+                    --ink: #e8f0f5;
+                    --ink-soft: #b1c2cf;
+                    --surface: rgba(29, 43, 54, 0.84);
+                    --surface-border: rgba(202, 221, 235, 0.2);
+                    --brand: #5aa7c0;
+                    --brand-strong: #3b839a;
+                    --chip: #203a48;
+                    --chip-border: #346174;
+                    --shadow: 0 20px 44px rgba(0, 0, 0, 0.4);
                 }
 
                 * {
@@ -107,6 +125,10 @@ function getWebviewContent(assignment: Assignment): string {
                     animation: riseIn 0.65s ease-out 0.08s both;
                 }
 
+                body.theme-dark .content-card {
+                    background: rgba(23, 35, 43, 0.95);
+                }
+
                 .content-header {
                     padding: 14px 20px;
                     border-bottom: 1px solid rgba(36, 50, 61, 0.1);
@@ -114,6 +136,10 @@ function getWebviewContent(assignment: Assignment): string {
                     font-weight: 700;
                     color: var(--ink-soft);
                     background: linear-gradient(180deg, rgba(246, 251, 253, 0.96), rgba(241, 247, 250, 0.96));
+                }
+
+                body.theme-dark .content-header {
+                    background: linear-gradient(180deg, rgba(45, 62, 75, 0.92), rgba(29, 43, 54, 0.92));
                 }
 
                 .description {
@@ -200,7 +226,7 @@ function getWebviewContent(assignment: Assignment): string {
                 }
             </style>
         </head>
-        <body>
+        <body class="theme-${theme}">
             <div class="shell">
                 <section class="hero">
                     <h1>${assignment.label}</h1>
