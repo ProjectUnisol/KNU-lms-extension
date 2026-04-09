@@ -4,6 +4,7 @@ import { Assignment, AssignmentsProvider } from "./assignment/assignment";
 import { getCourseList } from './course/getCourseList';
 import { getAssignmentList } from './assignment/getAssignmentList';
 import { displayAssignmentPage } from './assignment/displayAssignmentPage';
+import { SubmissionsProvider } from './submission/submission';
 
 export async function activate(context: vscode.ExtensionContext) {
 	let config = vscode.workspace.getConfiguration('knu');
@@ -21,6 +22,11 @@ export async function activate(context: vscode.ExtensionContext) {
 		treeDataProvider: assignmentsProvider
 	});
 
+	const submissionsProvider = new SubmissionsProvider([]);
+	vscode.window.createTreeView('submission', {
+		treeDataProvider: submissionsProvider
+	});
+
 	vscode.commands.registerCommand('course.refreshEntry', async () => {
 		courses = await getCourseList();
 		coursesProvider.refresh(courses);
@@ -33,6 +39,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	vscode.commands.registerCommand('assignment.displayAssignmentPage', async (assignment: Assignment) => {
 		displayAssignmentPage(assignment);
+		vscode.commands.executeCommand('submission.focus');
 	});
 }
 
