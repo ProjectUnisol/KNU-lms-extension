@@ -43,6 +43,11 @@
           "command": "course.refreshEntry",
           "when": "view == course",
           "group": "navigation"
+        },
+        {
+          "command": "submission.selectFile",
+          "when": "view == submission",
+          "group": "navigation"
         }
       ]
     },
@@ -62,6 +67,14 @@
       {
         "command": "assignment.displayAssignmentPage",
         "title": "display assignment page"
+      },
+      {
+        "command": "submission.selectFile",
+        "title": "select file",
+        "icon": {
+          "light": "resources/light/new-file.svg",
+          "dark": "resources/dark/new-file.svg"
+        }
       }
     ], 
     "configuration": {
