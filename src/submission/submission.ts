@@ -25,11 +25,6 @@ export class SubmissionsProvider implements vscode.TreeDataProvider<Submission> 
     getChildren(element?: Submission): Thenable<Submission[]> {
         return Promise.resolve(this.submissions);
     }
-
-    deleteChildren(submission: Submission): void {
-        this.submissions = this.submissions.filter(s => s !== submission);
-        this._onDidChangeTreeData.fire();
-    }
 }
 
 export class Submission extends vscode.TreeItem {
