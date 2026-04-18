@@ -1,10 +1,11 @@
 import * as vscode from 'vscode';
 import { Assignment } from './assignment';
 
-export async function displayAssignmentPage(assignment: Assignment) {
+export async function displayAssignmentPage(assignment: Assignment, extensionUri: vscode.Uri) {
     const config = vscode.workspace.getConfiguration('knu');
     const configuredTheme = config.get<string>('assignmentPageTheme') || 'light';
     const theme = configuredTheme === 'dark' ? 'dark' : 'light';
+    const resourceRoot = vscode.Uri.joinPath(extensionUri, 'resources');
 
     const panel = vscode.window.createWebviewPanel(
         'assignmentPage',
@@ -12,10 +13,15 @@ export async function displayAssignmentPage(assignment: Assignment) {
         vscode.ViewColumn.Two,
         {
             enableScripts: true,
+            localResourceRoots: [resourceRoot],
         }
     );
+
+    const styleUri = panel.webview.asWebviewUri(vscode.Uri.joinPath(resourceRoot, 'assignmentPage.css'));
+    const scriptUri = panel.webview.asWebviewUri(vscode.Uri.joinPath(resourceRoot, 'assignmentPage.js'));
+    const initialFilesJson = JSON.stringify(assignment.submissions).replace(/</g, '\\u003c');
     
-    panel.webview.html = getWebviewContent(assignment, theme);
+    panel.webview.html = getWebviewContent(assignment, theme, styleUri, scriptUri, initialFilesJson);
 
     panel.webview.onDidReceiveMessage(async message => {
         if (message.command === 'upload') {
@@ -52,7 +58,13 @@ export async function displayAssignmentPage(assignment: Assignment) {
     });
 }
 
-function getWebviewContent(assignment: Assignment, theme: 'light' | 'dark'): string {
+function getWebviewContent(
+    assignment: Assignment,
+    theme: 'light' | 'dark',
+    styleUri: vscode.Uri,
+    scriptUri: vscode.Uri,
+    initialFilesJson: string
+): string {
     const dueText = assignment.dueAt ? assignment.dueAt : '미정';
     const pointsText = assignment.pointsPossible ? `${assignment.pointsPossible}점` : '미지정';
     const submitTypeText = assignment.submissionTypes?.length
@@ -66,371 +78,10 @@ function getWebviewContent(assignment: Assignment, theme: 'light' | 'dark'): str
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>${assignment.label}</title>
-            <script>
-                const vscode = acquireVsCodeApi();
-
-                function renderUploadedFiles(files) {
-                    const fileList = document.getElementById('uploadedFileList');
-                    if (!fileList) {
-                        return;
-                    }
-
-                    if (!Array.isArray(files) || files.length === 0) {
-                        fileList.innerHTML = '<li class="empty">아직 업로드된 파일이 없습니다.</li>';
-                        return;
-                    }
-
-                    fileList.innerHTML = files.map(file => \`<li>\${file.path.split('/').pop()}</li>\`).join('');
-                }
-
-                document.addEventListener('DOMContentLoaded', () => {
-                    const uploadButton = document.getElementById('uploadFilesButton');
-                    if (!uploadButton) {
-                        return;
-                    }
-
-                    uploadButton.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        vscode.postMessage({
-                            command: 'upload'
-                        });
-                    });
-                });
-
-                window.addEventListener('message', event => {
-                    const message = event.data;
-                    if (message.command === 'filesUploaded') {
-                        renderUploadedFiles(message.files);
-                    }
-                });
-                
-                document.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    vscode.postMessage({
-                        command: 'submit'
-                    });
-                });
-            </script>
-            <style>
-                :root {
-                    --bg-top: #f7efe2;
-                    --bg-bottom: #d9e8f3;
-                    --ink: #24323d;
-                    --ink-soft: #4a5964;
-                    --surface: rgba(255, 255, 255, 0.86);
-                    --surface-border: rgba(36, 50, 61, 0.14);
-                    --brand: #0f6d8a;
-                    --brand-strong: #09546b;
-                    --chip: #ebf5fa;
-                    --chip-border: #c4dfea;
-                    --shadow: 0 18px 46px rgba(24, 43, 54, 0.17);
-                }
-
-                body.theme-dark {
-                    --bg-top: #1c2a35;
-                    --bg-bottom: #111921;
-                    --ink: #e8f0f5;
-                    --ink-soft: #b1c2cf;
-                    --surface: rgba(29, 43, 54, 0.84);
-                    --surface-border: rgba(202, 221, 235, 0.2);
-                    --brand: #5aa7c0;
-                    --brand-strong: #3b839a;
-                    --chip: #203a48;
-                    --chip-border: #346174;
-                    --shadow: 0 20px 44px rgba(0, 0, 0, 0.4);
-                }
-
-                * {
-                    box-sizing: border-box;
-                }
-
-                body {
-                    margin: 0;
-                    min-height: 100vh;
-                    padding: 28px 20px;
-                    color: var(--ink);
-                    font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
-                    background:
-                        radial-gradient(circle at 18% 16%, rgba(255, 255, 255, 0.78), transparent 42%),
-                        radial-gradient(circle at 88% 6%, rgba(226, 239, 247, 0.82), transparent 33%),
-                        linear-gradient(155deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
-                }
-
-                .shell {
-                    max-width: 980px;
-                    margin: 0 auto;
-                    display: grid;
-                    gap: 18px;
-                }
-
-                .hero,
-                .content-card,
-                .uploaded-files,
-                .submit-card {
-                    border-radius: 18px;
-                    border: 1px solid var(--surface-border);
-                    box-shadow: var(--shadow);
-                }
-
-                .hero {
-                    padding: 24px;
-                    background: var(--surface);
-                    animation: riseIn 0.55s ease-out both;
-                }
-
-                .hero h1 {
-                    margin: 0;
-                    font-size: clamp(1.45rem, 2.5vw, 2.15rem);
-                    line-height: 1.3;
-                    letter-spacing: -0.02em;
-                }
-
-                .meta {
-                    margin-top: 14px;
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 8px;
-                }
-
-                .meta span {
-                    display: inline-flex;
-                    align-items: center;
-                    padding: 7px 11px;
-                    border-radius: 999px;
-                    background: var(--chip);
-                    border: 1px solid var(--chip-border);
-                    color: var(--ink-soft);
-                    font-size: 0.86rem;
-                    font-weight: 600;
-                }
-
-                .content-card {
-                    background: rgba(255, 255, 255, 0.93);
-                    overflow: hidden;
-                    animation: riseIn 0.65s ease-out 0.08s both;
-                }
-
-                body.theme-dark .content-card {
-                    background: rgba(23, 35, 43, 0.95);
-                }
-
-                .content-header {
-                    padding: 14px 20px;
-                    border-bottom: 1px solid rgba(36, 50, 61, 0.1);
-                    font-size: 0.95rem;
-                    font-weight: 700;
-                    color: var(--ink-soft);
-                    background: linear-gradient(180deg, rgba(246, 251, 253, 0.96), rgba(241, 247, 250, 0.96));
-                }
-
-                body.theme-dark .content-header {
-                    background: linear-gradient(180deg, rgba(45, 62, 75, 0.92), rgba(29, 43, 54, 0.92));
-                }
-
-                .description {
-                    padding: 22px 20px;
-                    white-space: normal;
-                    color: var(--ink);
-                    line-height: 1.65;
-                    word-break: break-word;
-                }
-
-                .submit-card {
-                    padding: 18px 20px;
-                    background: var(--surface);
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    gap: 16px;
-                    animation: riseIn 0.75s ease-out 0.16s both;
-                }
-
-                .submit-card p {
-                    margin: 0;
-                    color: var(--ink-soft);
-                    font-size: 0.94rem;
-                }
-
-                .upload-block {
-                    display: grid;
-                    gap: 8px;
-                }
-
-                .upload-help {
-                    margin: 0;
-                    font-size: 0.84rem;
-                    color: var(--ink-soft);
-                }
-
-                .inline-form {
-                    display: inline;
-                }
-
-                .upload-btn {
-                    width: fit-content;
-                    border: 1px solid var(--chip-border);
-                    border-radius: 10px;
-                    padding: 8px 12px;
-                    font-size: 0.86rem;
-                    font-weight: 700;
-                    cursor: pointer;
-                    background: var(--chip);
-                    color: var(--brand-strong);
-                }
-
-                .upload-btn:hover {
-                    filter: brightness(0.98);
-                }
-
-                .uploaded-files {
-                    padding: 18px 20px;
-                    background: var(--surface);
-                    animation: riseIn 0.85s ease-out 0.22s both;
-                }
-
-                .uploaded-title {
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    gap: 12px;
-                    margin-bottom: 10px;
-                    font-size: 0.95rem;
-                    font-weight: 700;
-                    color: var(--ink-soft);
-                }
-
-                .uploaded-list {
-                    margin: 0;
-                    padding: 0;
-                    list-style: none;
-                    display: grid;
-                    gap: 8px;
-                }
-
-                .uploaded-list li:not(.empty) {
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                    padding: 10px 12px;
-                    border-radius: 12px;
-                    border: 1px solid var(--chip-border);
-                    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(245, 251, 255, 0.88));
-                    color: var(--ink);
-                    font-size: 0.9rem;
-                    font-weight: 600;
-                    line-height: 1.35;
-                    word-break: break-all;
-                    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
-                }
-
-                .uploaded-list li:not(.empty)::before {
-                    content: '파일';
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    height: 22px;
-                    min-width: 40px;
-                    padding: 0 8px;
-                    border-radius: 999px;
-                    border: 1px solid rgba(15, 109, 138, 0.22);
-                    background: rgba(15, 109, 138, 0.12);
-                    color: var(--brand-strong);
-                    font-size: 0.72rem;
-                    font-weight: 800;
-                    letter-spacing: 0.02em;
-                    flex-shrink: 0;
-                }
-
-                .uploaded-list li:not(.empty):hover {
-                    transform: translateY(-1px);
-                    border-color: rgba(15, 109, 138, 0.35);
-                    box-shadow: 0 8px 18px rgba(15, 109, 138, 0.16);
-                }
-
-                body.theme-dark .uploaded-list li:not(.empty) {
-                    background: linear-gradient(180deg, rgba(31, 49, 59, 0.9), rgba(23, 38, 46, 0.92));
-                    border-color: #385f72;
-                    color: #dbeaf3;
-                }
-
-                body.theme-dark .uploaded-list li:not(.empty)::before {
-                    border-color: rgba(132, 205, 226, 0.34);
-                    background: rgba(90, 167, 192, 0.2);
-                    color: #c8ebf5;
-                }
-
-                .empty {
-                    padding: 10px 12px;
-                    border-radius: 12px;
-                    border: 1px dashed var(--chip-border);
-                    color: var(--ink-soft);
-                    font-size: 0.86rem;
-                }
-
-                .submit-btn {
-                    border: 0;
-                    border-radius: 12px;
-                    padding: 12px 20px;
-                    font-size: 0.95rem;
-                    font-weight: 700;
-                    letter-spacing: 0.01em;
-                    cursor: pointer;
-                    color: #ffffff;
-                    background: linear-gradient(135deg, var(--brand), var(--brand-strong));
-                    box-shadow: 0 10px 20px rgba(15, 109, 138, 0.33);
-                    transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
-                }
-
-                .submit-btn:hover {
-                    transform: translateY(-1px);
-                    filter: brightness(1.03);
-                    box-shadow: 0 14px 26px rgba(15, 109, 138, 0.4);
-                }
-
-                .submit-btn:active {
-                    transform: translateY(0);
-                }
-
-                @keyframes riseIn {
-                    from {
-                        opacity: 0;
-                        transform: translateY(8px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-
-                @media (max-width: 720px) {
-                    body {
-                        padding: 16px 12px 20px;
-                    }
-
-                    .hero,
-                    .content-card,
-                    .submit-card,
-                    .uploaded-files {
-                        border-radius: 14px;
-                    }
-
-                    .submit-card {
-                        flex-direction: column;
-                        align-items: stretch;
-                    }
-
-                    .uploaded-title {
-                        flex-direction: column;
-                        align-items: flex-start;
-                    }
-
-                    .submit-btn {
-                        width: 100%;
-                    }
-                }
-            </style>
+            <link rel="stylesheet" href="${styleUri}">
         </head>
         <body class="theme-${theme}">
+            <script id="initialUploadedFiles" type="application/json">${initialFilesJson}</script>
             <div class="shell">
                 <section class="hero">
                     <h1>${assignment.label}</h1>
@@ -468,6 +119,7 @@ function getWebviewContent(assignment: Assignment, theme: 'light' | 'dark'): str
                     <button class="submit-btn" type="submit">과제 제출하기</button>
                 </form>
             </div>
+            <script src="${scriptUri}"></script>
         </body>
         </html>
     `;

@@ -32,7 +32,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	});
 
 	vscode.commands.registerCommand('assignment.displayAssignmentPage', async (assignment: Assignment) => {
-		displayAssignmentPage(assignment);
+		displayAssignmentPage(assignment, context.extensionUri);
 	});
 }
 
