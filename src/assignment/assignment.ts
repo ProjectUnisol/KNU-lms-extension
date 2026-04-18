@@ -36,6 +36,7 @@ export class Assignment extends vscode.TreeItem {
         public readonly pointsPossible: number,
         public readonly submissionTypes: string[],
         public readonly published: boolean,
+        public submissions: vscode.Uri[],
         public readonly collapsibleState: vscode.TreeItemCollapsibleState
     ) {
         super(label, collapsibleState);

@@ -34,6 +34,7 @@ export async function getAssignmentList(courseId: number): Promise<Assignment[]>
             assignment.points_possible || 0,
             assignment.submission_types || [],
             assignment.published || false,
+            [],
             vscode.TreeItemCollapsibleState.None
         ));
     } catch (error: any) {
