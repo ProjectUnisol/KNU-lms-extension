@@ -10,7 +10,7 @@ export async function uploadSubmissionFile(params: {
     assignmentId: number;
     token: string;
     fileUri: vscode.Uri;
-}): Promise<void> {
+}): Promise<number> {
     const { courseId, assignmentId, token, fileUri } = params;
     const fileName = fileUri.fsPath.split('/').pop() || 'unknown';
     const fileStat = await vscode.workspace.fs.stat(fileUri);
@@ -55,4 +55,7 @@ export async function uploadSubmissionFile(params: {
     if (!response.ok) {
         throw new Error(`파일 업로드 실패: ${response.status}`);
     }
+
+    const result = await response.json();
+    return result.id;
 }
