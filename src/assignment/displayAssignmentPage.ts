@@ -67,7 +67,6 @@ export async function displayAssignmentPage(assignment: Assignment, extensionUri
                 });
             }
         } else if (message.command === 'submit') {
-            vscode.window.showInformationMessage("과제 제출 시작");
             const uploadFileIds: number[] = [];
 
             const comment = await vscode.window.showInputBox({
@@ -92,10 +91,8 @@ export async function displayAssignmentPage(assignment: Assignment, extensionUri
                 }
             }
 
-            console.log('업로드된 파일 ID:', uploadFileIds);
-
             await submitAssignment(assignment.courseId, assignment.assignmentId, token, uploadFileIds, comment);
-		    vscode.window.showInformationMessage(`제출되었습니다!${comment ? ` 코멘트: ${comment}` : ''}`, { modal: true });
+		    vscode.window.showInformationMessage(`제출되었습니다!`, { modal: true });
         }
     });
 }
