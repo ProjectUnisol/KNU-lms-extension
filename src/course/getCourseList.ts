@@ -2,8 +2,8 @@ import * as vscode from "vscode";
 import { Course } from "./course";
 
 export async function getCourseList(): Promise<Course[]> {
-    let config = vscode.workspace.getConfiguration('knu');
-    let token: any = config.get<string>('token') || "";
+    const config = vscode.workspace.getConfiguration('knu');
+    const token: any = config.get<string>('token') || "";
 
     if (token === "") {
         vscode.window.showWarningMessage("LMS 토큰을 설정해주세요.");
@@ -23,7 +23,7 @@ export async function getCourseList(): Promise<Course[]> {
             throw new Error(`LMS 연결 실패: ${response.status}`);
         }
         
-        let data: any = await response.json();
+        const data: any = await response.json();
 
         return data
             .filter((course: any) => typeof course?.name === "string" && course.name.trim() !== "")
