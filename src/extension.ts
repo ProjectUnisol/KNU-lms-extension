@@ -6,8 +6,6 @@ import { getAssignmentList } from './assignment/getAssignmentList';
 import { displayAssignmentPage } from './assignment/displayAssignmentPage';
 
 export async function activate(context: vscode.ExtensionContext) {
-	let config = vscode.workspace.getConfiguration('knu');
-
 	let courses: any = await getCourseList();
 
 	const coursesProvider = new CoursesProvider(courses);
