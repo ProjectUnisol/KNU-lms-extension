@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { Course, CoursesProvider } from "./course/course";
-import { Assignment, AssignmentsProvider } from "./assignment/assignment";
+import { Course, CoursesProvider } from './course/course';
+import { Assignment, AssignmentsProvider } from './assignment/assignment';
 import { getCourseList } from './course/getCourseList';
 import { getAssignmentList } from './assignment/getAssignmentList';
 import { displayAssignmentPage } from './assignment/displayAssignmentPage';
