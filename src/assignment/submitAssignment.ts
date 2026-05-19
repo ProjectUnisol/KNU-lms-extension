@@ -1,4 +1,3 @@
-import { CANVAS_BASE_URL } from '../config';
 import { getProperties } from '../getProperites';
 
 export async function submitAssignment(courseId: number, assignmentId: number, uploadFileIds: number[], comment?: string) {
