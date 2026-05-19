@@ -2,12 +2,12 @@ import * as vscode from 'vscode';
 import { Assignment } from './assignment';
 import { uploadSubmissionFile } from './uploadSubmissionFile';
 import { submitAssignment } from './submitAssignment';
+import { getProperties } from '../getProperites';
 
 export async function displayAssignmentPage(assignment: Assignment, extensionUri: vscode.Uri) {
-    const config = vscode.workspace.getConfiguration('canvasbridge');
-    const token = config.get<string>('token') || '';
+    const { token, baseURL } = getProperties();
 
-    const configuredTheme = config.get<string>('assignmentPageTheme') || 'light';
+    const configuredTheme = vscode.workspace.getConfiguration('canvasbridge').get<string>('assignmentPageTheme') || 'light';
     const theme = configuredTheme === 'dark' ? 'dark' : 'light';
     const resourceRoot = vscode.Uri.joinPath(extensionUri, 'resources');
 
@@ -81,7 +81,6 @@ export async function displayAssignmentPage(assignment: Assignment, extensionUri
                     const fileId = await uploadSubmissionFile({
                         courseId: assignment.courseId,
                         assignmentId: assignment.assignmentId,
-                        token,
                         fileUri
                     });
                     uploadFileIds.push(fileId);
@@ -92,7 +91,7 @@ export async function displayAssignmentPage(assignment: Assignment, extensionUri
             }
 
             try {
-                await submitAssignment(assignment.courseId, assignment.assignmentId, token, uploadFileIds, comment);
+                await submitAssignment(assignment.courseId, assignment.assignmentId, uploadFileIds, comment);
             } catch (error) {
                 vscode.window.showErrorMessage(error instanceof Error ? error.message : '과제 제출 중 알 수 없는 오류가 발생했습니다.');
                 return;

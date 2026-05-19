@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { CANVAS_BASE_URL } from '../config';
+import { getProperties } from '../getProperites';
 
 type UploadPreparationResponse = {
     upload_url: string;
@@ -9,15 +9,15 @@ type UploadPreparationResponse = {
 export async function uploadSubmissionFile(params: {
     courseId: number;
     assignmentId: number;
-    token: string;
     fileUri: vscode.Uri;
 }): Promise<number> {
-    const { courseId, assignmentId, token, fileUri } = params;
+    const { token, baseURL } = getProperties();
+    const { courseId, assignmentId, fileUri } = params;
     const fileName = fileUri.fsPath.split('/').pop() || 'unknown';
     const fileStat = await vscode.workspace.fs.stat(fileUri);
     const fileParentFolderPath = fileUri.fsPath.split('/').slice(0, -1).join('/') || '';
 
-    let response = await fetch(`${CANVAS_BASE_URL}/api/v1/courses/${courseId}/assignments/${assignmentId}/submissions/self/files`, {
+    let response = await fetch(`${baseURL}/api/v1/courses/${courseId}/assignments/${assignmentId}/submissions/self/files`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

@@ -1,18 +1,16 @@
 import * as vscode from 'vscode';
 import { Course } from './course';
-import { CANVAS_BASE_URL } from '../config';
+import { getProperties } from '../getProperites';
 
 export async function getCourseList(): Promise<Course[]> {
-    const config = vscode.workspace.getConfiguration('canvasbridge');
-    const token: any = config.get<string>('token') || '';
+    const { token, baseURL } = getProperties();
 
-    if (token === '') {
-        vscode.window.showWarningMessage('LMS 토큰을 설정해주세요.');
+    if (token === '' || baseURL === '') {
         return Promise.resolve([]);
     }
 
     try {
-        const response = await fetch(`${CANVAS_BASE_URL}/api/v1/courses?enrollment_state=active`, {
+        const response = await fetch(`${baseURL}/api/v1/courses?enrollment_state=active`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
