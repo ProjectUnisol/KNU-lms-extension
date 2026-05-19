@@ -6,13 +6,8 @@ type UploadPreparationResponse = {
     upload_params: Record<string, unknown>;
 };
 
-export async function uploadSubmissionFile(params: {
-    courseId: number;
-    assignmentId: number;
-    fileUri: vscode.Uri;
-}): Promise<number> {
+export async function uploadSubmissionFile(courseId: number, assignmentId: number, fileUri: vscode.Uri): Promise<number> {
     const { token, baseURL } = getProperties();
-    const { courseId, assignmentId, fileUri } = params;
     const fileName = fileUri.fsPath.split('/').pop() || 'unknown';
     const fileStat = await vscode.workspace.fs.stat(fileUri);
     const fileParentFolderPath = fileUri.fsPath.split('/').slice(0, -1).join('/') || '';
